@@ -1,0 +1,3 @@
+[submodule "external/sensormanager"]
+	path = external/sensormanager
+	url = ssh://git@bitbucket.rs1.cloud:7999/unismart/smaroomans-sensormanager.git

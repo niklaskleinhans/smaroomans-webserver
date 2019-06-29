@@ -1,5 +1,6 @@
 from flask import request, render_template, send_from_directory
 from flask_api import FlaskAPI, status, exceptions
+from flask_cors import CORS
 from flask_mqtt import Mqtt
 import json
 
@@ -13,7 +14,7 @@ app.config['MQTT_BROKER_URL'] = '192.168.1.230'
 app.config['MQTT_BROKER_PORT'] = 1883
 app.config['MQTT_REFRESH_TIME'] = 1.0  # refresh time in seconds
 mqtt = Mqtt(app)
-
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 @app.route('/')
 def index():

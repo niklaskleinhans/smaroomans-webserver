@@ -6,9 +6,13 @@ import json
 
 from database.database import DB
 from external.sensormanager.sensormanager import SensorManager
+from external.sensormanager.utilities.publisher import Publisher
 myDB = DB()
-#myDB._initialisation()
 sensorManager = SensorManager(myDB)
+#sensorManager.startSubscription()
+#publisher = Publisher(myDB,'192.168.1.230')
+#print(myDB.getActuatorTopic('notificationrgbled1'))
+#publisher.publish(myDB.getActuatorTopic('notificationrgbled1'),{'state': [0,1,0]})
 
 test = {"mac":"", "cmd": "switch", "val": "on"}
 
@@ -68,7 +72,6 @@ def getRooms():
 @app.route('/api/roomsensors/<string:roomkey>', methods=['GET'])
 def getRoomSensors(roomkey):
     sensors = myDB.getRoomSensors(roomkey)
-    #print(roomkey)
     return jsonify({'sensors': sensors})
 
 

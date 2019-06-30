@@ -1,8 +1,8 @@
 class User():
-    def __init__(self, name, workplan = []):
-        self.name = name
+    def __init__(self, key, workplan = []):
+        self.key = key
         self.workplan = workplan
 
-    def getUser(self):
-        return {'name': self.name,
+    def getDict(self):
+        return {'key': self.key,
                 'workplan': self.workplan}

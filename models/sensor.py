@@ -4,7 +4,7 @@ class Sensor():
         self.data = data
         self.room = room
 
-    def getSensor(self):
+    def getDict(self):
         return {'key': self.key,
                 'data': self.data,
                 'room': self.room}

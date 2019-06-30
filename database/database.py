@@ -31,6 +31,7 @@ class DB():
         sensors = roomDB.get(where('room')==room)['sensors']
         for sensor in sensors:
             sensorData.append(sensorsDB.get(where('key') == sensor)['data'])
+            
     def _initialisation(self):
         sensorsDB.insert(Sensor(key='multisensor_Temperature').getSensor())
         '''roomDB.insert(Room('room1',5,['sensor1', 'sensor2','sensor3']).getRoom())

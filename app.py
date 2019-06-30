@@ -8,7 +8,7 @@ from database.database import DB
 from external.sensormanager.sensormanager import SensorManager
 myDB = DB()
 #myDB._initialisation()
-#sensorManager = SensorManager(myDB)
+sensorManager = SensorManager(myDB)
 
 test = {"mac":"", "cmd": "switch", "val": "on"}
 

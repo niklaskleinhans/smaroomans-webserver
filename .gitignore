@@ -22,3 +22,6 @@ htmlcov/
 .coverage
 .coverage.*
 *,cover
+
+# custom
+database/content/*.json

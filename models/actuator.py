@@ -1,12 +1,12 @@
 class Actuator():
-    def __init__(self, key, sensortype, data={}, room=''):
-        self.key = key
-        self.data = data
-        self.room = room
-        self.sensortype = sensortype
+    def __init__(self, key, actuatortype='', topic='', data={}, room=''):
+        self._key = key
+        self._data = data
+        self._room = room
+        self._actuatortype = actuatortype
 
     def getDict(self):
-        return {'key': self.key,
-                'data': self.data,
-                'room': self.room,
-                'sensortype': self.sensortype}
+        return {'key': self._key,
+                'data': self._data,
+                'room': self._room,
+                'actuatortype': self._actuatortype}

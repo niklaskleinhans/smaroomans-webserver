@@ -1,11 +1,11 @@
 class Room():
-    def __init__(self, name, maxStaff=0, sensors=[]):
-        self._name = name
+    def __init__(self, key, maxStaff=0, sensors=[]):
+        self._key = key
         self._maxStaff = maxStaff
         self._sensors = sensors
 
     def getRoom(self):
-        return {'name': self._name,
+        return {'key': self._key,
                 'maxStaff': self._maxStaff,
                 'sensors': self._sensors}
     

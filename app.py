@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_from_directory
+from flask import Flask, request, render_template, send_from_directory, jsonify
 from flask_api import FlaskAPI, status, exceptions
 from flask_cors import CORS
 from flask_mqtt import Mqtt
@@ -8,8 +8,7 @@ from database.database import DB
 from external.sensormanager.sensormanager import SensorManager
 myDB = DB()
 #myDB._initialisation()
-sensorManager = SensorManager(myDB)
-
+#sensorManager = SensorManager(myDB)
 
 test = {"mac":"", "cmd": "switch", "val": "on"}
 
@@ -56,6 +55,22 @@ def stopThread():
 def startThread():
     sensorManager.startSubscription()
     return '', status.HTTP_200_OK
+
+@app.route('/api/initdb', methods=['PUT'])
+def initDB():
+    myDB._initialisation()    
+    return '', status.HTTP_200_OK
+
+@app.route('/api/allrooms', methods=['GET'])
+def getRooms():
+    return jsonify({'rooms': myDB.getAllRooms()})
+
+@app.route('/api/roomsensors/<string:roomkey>', methods=['GET'])
+def getRoomSensors(roomkey):
+    sensors = myDB.getRoomSensors(roomkey)
+    #print(roomkey)
+    return jsonify({'sensors': sensors})
+
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')

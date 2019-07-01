@@ -8,12 +8,13 @@ from database.database import DB
 from external.sensormanager.sensormanager import SensorManager
 from external.sensormanager.utilities.publisher import Publisher
 from errorhandling.errortypes import NotModified, DBError
+from utilities.statemachine import StateMachine
 
 brokerIP = '192.168.1.230'
 
 
 myDB = DB()
-sensorManager = SensorManager(myDB, brokerIP)
+sensorManager = SensorManager(myDB, brokerIP, StateMachine)
 #sensorManager.startSubscription()
 #publisher = Publisher(myDB,'192.168.1.230')
 #print(myDB.getActuatorTopic('notificationrgbled1'))

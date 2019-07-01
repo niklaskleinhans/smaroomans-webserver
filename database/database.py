@@ -30,6 +30,17 @@ class DB():
     def setUserPlan(self, user, workplan):
         usersDB.upsert({'workplan':workplan}, where('key')==user)
 
+    def addNotification(self, room, notification):
+        roomNotifications = roomDB.get(where('key')==room)['notifications']
+        for idx, roomNotification in enumerate(roomNotifications):
+            if roomNotification['notificationType'] == notification['notificationType']:
+                roomNotifications[idx]= notification
+                roomDB.update({'notifications': roomNotifications}, where('key')==room)
+                return
+        roomNotifications.append(notification)
+        roomDB.update({'notifications': roomNotifications}, where('key')==room)
+
+
     def updateSensorData(self, key, data):
         key = str(key).replace(" ","_")
         sensorQuery = Query()
@@ -57,7 +68,7 @@ class DB():
         key = str(key).replace(" ", "_")
         sensor = sensorsDB.get(where('key')==key)
         return sensor if sensor is not None else None 
-    
+    '''
     def getActuatorTopic(self, key):
         key = str(key).replace(" ", "_")
         actuator = actuatorsDB.get(where('key')==key)
@@ -67,11 +78,9 @@ class DB():
             return topic
         else:
             return None
-
+    '''
 
     def getRoomData(self, room):
-        roomQuery = Query()
-        sensorQuery = Query()
         sensorData = []
         sensors = roomDB.get(where('room')==room)['sensors']
         for sensor in sensors:
@@ -86,6 +95,26 @@ class DB():
                                'data': self.getSensorData(sensor)})
         return sensordata
 
+    def getRoomActuatorTopicAndData(self, room, actuatorType):
+        roomActuators = roomDB.get(where('key') == room)['actuators']
+        actuators = []
+        for actuator in roomActuators:
+            actuators.append(actuatorsDB.get(where('key')==actuator))
+        actuatorTopic = None
+        actuatorData = None
+        for actuator in actuators:
+            if actuator['actuatortype']== actuatorType:
+                actuatorTopic = actuator['topic']
+                actuatorData = actuator['topicdata']
+        return actuatorTopic , actuatorData 
+
+    def getRoomTemperature(self, room):
+        roomSensors = roomDB.get(where('key')==room)['sensors']
+        for roomSensor in roomSensors:
+            sensor = sensorsDB.get(where('key')==roomSensor)
+            if sensor['sensortype'] == 'temperature':
+                return sensor['data']['Temperature']
+
     def _setSensorRooms(self):
         sensors = self.getAllSensors()
         sensorQuery=Query()
@@ -94,6 +123,20 @@ class DB():
             for room in rooms:
                 if sensor['key'] in room['sensors']:
                     sensorsDB.update({'key': sensor['key'], 'room': room['key'] }, sensorQuery.key == sensor['key'])
+
+    def getRoomWindowStatus(self,room):
+        roomSensors = roomDB.get(where('key')==room)['sensors']
+        for roomSensor in roomSensors:
+            sensor = sensorsDB.get(where('key')==roomSensor)
+            if sensor['sensortype'] == 'window':
+                return sensor['data']['window']
+
+    def getRoomLuminance(self, room):
+        roomSensors = roomDB.get(where('key')==room)['sensors']
+        for roomSensor in roomSensors:
+            sensor = sensorsDB.get(where('key')==roomSensor)
+            if sensor['sensortype'] == 'luminance':
+                return sensor['data']['Luminance']
     
     def _setActuatorRooms(self):
         actuators = self.getAllActuators()
@@ -106,32 +149,33 @@ class DB():
     def _initialisation(self):
         roomDB.purge()
         usersDB.purge()
+        sensorsDB.purge()
         actuatorsDB.purge_tables()
-        sensorsDB.insert(Sensor(key='multisensor_Relative_Humidity').getDict())
-        sensorsDB.insert(Sensor(key='multisensor_Temperature').getDict())
+        sensorsDB.insert(Sensor(key='multisensor_Relative_Humidity', sensortype='humidity', data={'Humidity':0}).getDict())
+        sensorsDB.insert(Sensor(key='multisensor_Temperature', sensortype='temperature', data={'Temperature':0}).getDict())
         sensorsDB.insert(Sensor(key='multisensor_Ultraviolet').getDict())
         sensorsDB.insert(Sensor(key='multisensor_Group_1_Interval').getDict())
-        sensorsDB.insert(Sensor(key='multisensor_Luminance').getDict())
+        sensorsDB.insert(Sensor(key='multisensor_Luminance', sensortype='luminance', data={'Luminance':30}).getDict())
         sensorsDB.insert(Sensor(key='plugwise1_type').getDict())
         sensorsDB.insert(Sensor(key='plugwise1_ts').getDict())
         sensorsDB.insert(Sensor(key='plugwise1_mac').getDict())
-        sensorsDB.insert(Sensor(key='plugwise1_power').getDict())
+        sensorsDB.insert(Sensor(key='plugwise1_power', sensortype='lightpower').getDict())
         sensorsDB.insert(Sensor(key='plugwise1_energy').getDict())
         sensorsDB.insert(Sensor(key='plugwise1_cum_energy').getDict())
         sensorsDB.insert(Sensor(key='plugwise1_interval').getDict())
-        sensorsDB.insert(Sensor(key='gpiosensor_window').getDict())
-        actuatorsDB.insert(Actuator(key='stateled1', actuatortype='stateled', data={'data': 0}).getDict())
-        actuatorsDB.insert(Actuator(key='stateled2', actuatortype='stateled', data={'data': 0}).getDict())
-        actuatorsDB.insert(Actuator(key='stateled3', actuatortype='stateled', data={'data': 0}).getDict())
-        actuatorsDB.insert(Actuator(key='stateled4', actuatortype='stateled', data={'data': 0}).getDict())
-        actuatorsDB.insert(Actuator(key='stateled5', actuatortype='stateled', data={'data': 0}).getDict())
-        actuatorsDB.insert(Actuator(key='stateled6', actuatortype='stateled', data={'data': 0}).getDict())
-        actuatorsDB.insert(Actuator(key='stateled7', actuatortype='stateled', data={'data': 0}).getDict())
-        actuatorsDB.insert(Actuator(key='stateled8', actuatortype='stateled', data={'data': 0}).getDict())
-        actuatorsDB.insert(Actuator(key='stateled9', actuatortype='stateled', data={'data': 0}).getDict())
-        actuatorsDB.insert(Actuator(key='stateled10', actuatortype='stateled', data={'data': 0}).getDict())
-        actuatorsDB.insert(Actuator(key='notificationrgbled1', actuatortype='notificationrgbled', data={'state': [0,0,0]}).getDict())
-        actuatorsDB.insert(Actuator(key='light1', actuatortype='plugwise2py/cmd/switch/000D6F0004B1E6C4', data={'mac':"", "cmd":"switch", "val":"off"}).getDict())
+        sensorsDB.insert(Sensor(key='gpiosensor_window', sensortype='window', data={'window':0}).getDict())
+        actuatorsDB.insert(Actuator(key='stateled1', actuatortype='stateled', topicdata={'data': 0}).getDict())
+        actuatorsDB.insert(Actuator(key='stateled2', actuatortype='stateled', topicdata={'data': 0}).getDict())
+        actuatorsDB.insert(Actuator(key='stateled3', actuatortype='stateled', topicdata={'data': 0}).getDict())
+        actuatorsDB.insert(Actuator(key='stateled4', actuatortype='stateled', topicdata={'data': 0}).getDict())
+        actuatorsDB.insert(Actuator(key='stateled5', actuatortype='stateled', topicdata={'data': 0}).getDict())
+        actuatorsDB.insert(Actuator(key='stateled6', actuatortype='stateled', topicdata={'data': 0}).getDict())
+        actuatorsDB.insert(Actuator(key='stateled7', actuatortype='stateled', topicdata={'data': 0}).getDict())
+        actuatorsDB.insert(Actuator(key='stateled8', actuatortype='stateled', topicdata={'data': 0}).getDict())
+        actuatorsDB.insert(Actuator(key='stateled9', actuatortype='stateled', topicdata={'data': 0}).getDict())
+        actuatorsDB.insert(Actuator(key='stateled10', actuatortype='stateled', topicdata={'data': 0}).getDict())
+        actuatorsDB.insert(Actuator(key='notificationrgbled1', actuatortype='notificationrgbled', topicdata={'state': [0,0,0]}).getDict())
+        actuatorsDB.insert(Actuator(key='light1', actuatortype='light', topic= 'plugwise2py/cmd/switch/000D6F0004B1E6C4', topicdata={'mac':"", "cmd":"switch", "val":"off"}).getDict())
 
         for i in range(19):
             sensorsDB.insert(Sensor(key='sensor'+ str(i)).getDict())
@@ -144,7 +188,7 @@ class DB():
                                                            'plugwise1_power', 
                                                            'plugwise1_energy', 
                                                            'plugwise1_cum_energy',
-                                                           'plugwise1_interval'], actuators=['stateled1', 'notificationrgbled1', 'light1']).getDict())
+                                                           'plugwise1_interval'], actuators=['stateled1', 'notificationrgbled1', 'light1'], users=['staff1', 'staff2']).getDict())
         roomDB.insert(Room(key='room2',maxStaff=3,sensors=['sensor1', 'sensor2'], actuators=['stateled2']).getDict())
         roomDB.insert(Room(key='room3',maxStaff=3,sensors=['sensor3', 'sensor4'], actuators=['stateled3']).getDict())
         roomDB.insert(Room(key='room4',maxStaff=3,sensors=['sensor5', 'sensor6'], actuators=['stateled4']).getDict())

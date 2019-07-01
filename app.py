@@ -7,6 +7,7 @@ import json
 from database.database import DB
 from external.sensormanager.sensormanager import SensorManager
 from external.sensormanager.utilities.publisher import Publisher
+from errorhandling.errortypes import NotModified, DBError
 
 brokerIP = '192.168.1.230'
 
@@ -29,6 +30,18 @@ app.config['MQTT_BROKER_PORT'] = 1883
 app.config['MQTT_REFRESH_TIME'] = 1.0  # refresh time in seconds
 mqtt = Mqtt(app)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+@app.errorhandler(NotModified)
+def handle_not_modified(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
+
+@app.errorhandler(DBError)
+def handle_DBError(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
 
 @app.route('/')
 def index():
@@ -71,13 +84,38 @@ def initDB():
 
 @app.route('/api/allrooms', methods=['GET'])
 def getRooms():
-    return jsonify({'rooms': myDB.getAllRooms()})
+    try:
+        rooms = myDB.getAllRooms()
+    except Exception as e:
+        raise DBError(str(e), status_code=500) 
+    return jsonify({'rooms': rooms})
 
 @app.route('/api/roomsensors/<string:roomkey>', methods=['GET'])
 def getRoomSensors(roomkey):
-    sensors = myDB.getRoomSensors(roomkey)
+    try:
+        sensors = myDB.getRoomSensors(roomkey)
+    except Exception as e:
+        raise DBError(str(e), status_code=500) 
     return jsonify({'sensors': sensors})
 
+@app.route('/api/allusers', methods=['GET'])
+def getAllUsers():
+    try:
+        users = myDB.getAllUsers()
+    except Exception as e:
+        raise DBError(str(e), status_code=500) 
+    return jsonify({'users': users})
+
+#@app.route('/api/getuserplan', methods=['GET'])
+
+@app.route('/api/setuserplan', methods=['PUT'])
+def setUserPlan():
+    payload = request.json
+    try:
+        myDB.setUserPlan(payload['key'], payload['workplan'])
+    except Exception as e:
+        raise NotModified(str(e), status_code=304)
+    return '', status.HTTP_200_OK
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')

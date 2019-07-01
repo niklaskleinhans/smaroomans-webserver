@@ -24,6 +24,12 @@ class DB():
     def getAllActuators(self):
         return actuatorsDB.all()
 
+    def getAllUsers(self):
+        return usersDB.all()
+
+    def setUserPlan(self, user, workplan):
+        usersDB.upsert({'workplan':workplan}, where('key')==user)
+
     def updateSensorData(self, key, data):
         key = str(key).replace(" ","_")
         sensorQuery = Query()
@@ -47,6 +53,11 @@ class DB():
         else:
             return None
     
+    def getSensorData(self, key):
+        key = str(key).replace(" ", "_")
+        sensor = sensorsDB.get(where('key')==key)
+        return sensor if sensor is not None else None 
+    
     def getActuatorTopic(self, key):
         key = str(key).replace(" ", "_")
         actuator = actuatorsDB.get(where('key')==key)
@@ -56,11 +67,6 @@ class DB():
             return topic
         else:
             return None
-
-    def getSensorData(self, key):
-        key = str(key).replace(" ", "_")
-        sensor = sensorsDB.get(where('key')==key)
-        return sensor if sensor is not None else None 
 
 
     def getRoomData(self, room):

@@ -3,6 +3,7 @@ from models.room import Room
 from models.user import User
 from models.sensor import Sensor
 from models.actuator import Actuator
+import threading
 import numpy as np
 
 roomDB = TinyDB('database/content/room.json')
@@ -14,6 +15,8 @@ actuatorsDB = TinyDB('database/content/actuators.json')
 class DB():
     def __init__(self):
         print('init DB')
+        self.lock = threading.Lock()
+        self.sensorCache={}
     
     def getAllRooms(self):
         return roomDB.all()
@@ -27,33 +30,36 @@ class DB():
     def getAllUsers(self):
         return usersDB.all()
 
+    def updateSensorCache(self, key, data):
+        self.lock.acquire()
+        try:
+            self.sensorCache[key] = data
+        finally:
+            self.lock.release()
+
+
     def setUserPlan(self, user, workplan):
         usersDB.upsert({'workplan':workplan}, where('key')==user)
 
-    def addNotification(self, room, notification):
+    def appendNotification(self, room, notification):
         roomNotifications = roomDB.get(where('key')==room)['notifications']
-        for idx, roomNotification in enumerate(roomNotifications):
-            if roomNotification['notificationType'] == notification['notificationType']:
-                roomNotifications[idx]= notification
-                roomDB.update({'notifications': roomNotifications}, where('key')==room)
-                return
         roomNotifications.append(notification)
         roomDB.update({'notifications': roomNotifications}, where('key')==room)
 
+    def clearAllNotifications(self):
+        for room in self.getAllRooms():
+            roomDB.update({'notifications' : []}, where('key')==room['key'])
 
     def updateSensorData(self, key, data):
         key = str(key).replace(" ","_")
         sensorQuery = Query()
         sensor = sensorsDB.get(where('key')==key)
-        if sensor is not None:
-            sensorsDB.upsert({'key': key, 'data': data }, sensorQuery.key == key)
-        else:
-            sensorsDB.insert(Sensor(key=key,data=data).getDict())
+        self.updateSensorCache(key, data)
 
-    def updateSensorRoom(self, key, room):
-        key = str(key).replace(" ", "_")
-        sensorQuery = Query()
-        sensorsDB.update({'room': room }, sensorQuery.key == key )
+   # def updateSensorRoom(self, key, room):
+   #     key = str(key).replace(" ", "_")
+   #     sensorQuery = Query()
+   #     sensorsDB.update({'room': room }, sensorQuery.key == key )
 
     def getSensorTopic(self, key):
         key = str(key).replace(" ", "_")
@@ -67,6 +73,7 @@ class DB():
     def getSensorData(self, key):
         key = str(key).replace(" ", "_")
         sensor = sensorsDB.get(where('key')==key)
+        if key in self.sensorCache : sensor['data'] = self.sensorCache[key]
         return sensor if sensor is not None else None 
     '''
     def getActuatorTopic(self, key):
@@ -78,14 +85,14 @@ class DB():
             return topic
         else:
             return None
-    '''
 
     def getRoomData(self, room):
         sensorData = []
         sensors = roomDB.get(where('room')==room)['sensors']
         for sensor in sensors:
             sensorData.append(sensorsDB.get(where('key') == sensor)['data'])
-    
+    '''
+
     def getRoomSensors(self, room):
         sensordata=[]
         sensors = roomDB.get(where('key')==room)['sensors']
@@ -112,9 +119,31 @@ class DB():
         roomSensors = roomDB.get(where('key')==room)['sensors']
         for roomSensor in roomSensors:
             sensor = sensorsDB.get(where('key')==roomSensor)
-            if sensor['sensortype'] == 'temperature':
-                return sensor['data']['Temperature']
+            if sensor['sensortype'] == 'temperature' and sensor['key'] in self.sensorCache:
+                return self.sensorCache[sensor['key']]['Temperature']
 
+
+    def getRoomWindowStatus(self,room):
+        roomSensors = roomDB.get(where('key')==room)['sensors']
+        for roomSensor in roomSensors:
+            sensor = sensorsDB.get(where('key')==roomSensor)
+            if sensor['sensortype'] == 'window' and sensor['key'] in self.sensorCache:
+                return self.sensorCache[sensor['key']]['window']
+
+    def getRoomLuminance(self, room):
+        roomSensors = roomDB.get(where('key')==room)['sensors']
+        for roomSensor in roomSensors:
+            sensor = sensorsDB.get(where('key')==roomSensor)
+            if sensor['sensortype'] == 'luminance' and sensor['key'] in self.sensorCache:
+                return self.sensorCache[sensor['key']]['Luminance']
+    
+    def getRoomLightState(self,room):
+        roomSensors = roomDB.get(where('key')==room)['sensors']
+        for roomSensor in roomSensors:
+            sensor = sensorsDB.get(where('key')==roomSensor)
+            if sensor['sensortype'] == 'lightswitch' and sensor['key'] in self.sensorCache:
+                return self.sensorCache[sensor['key']]['switch']
+    
     def _setSensorRooms(self):
         sensors = self.getAllSensors()
         sensorQuery=Query()
@@ -122,21 +151,8 @@ class DB():
         for sensor in sensors:
             for room in rooms:
                 if sensor['key'] in room['sensors']:
+                    print('update:' , sensor['key'])
                     sensorsDB.update({'key': sensor['key'], 'room': room['key'] }, sensorQuery.key == sensor['key'])
-
-    def getRoomWindowStatus(self,room):
-        roomSensors = roomDB.get(where('key')==room)['sensors']
-        for roomSensor in roomSensors:
-            sensor = sensorsDB.get(where('key')==roomSensor)
-            if sensor['sensortype'] == 'window':
-                return sensor['data']['window']
-
-    def getRoomLuminance(self, room):
-        roomSensors = roomDB.get(where('key')==room)['sensors']
-        for roomSensor in roomSensors:
-            sensor = sensorsDB.get(where('key')==roomSensor)
-            if sensor['sensortype'] == 'luminance':
-                return sensor['data']['Luminance']
     
     def _setActuatorRooms(self):
         actuators = self.getAllActuators()
@@ -145,7 +161,6 @@ class DB():
             for room in rooms:
                 if actuator['key'] in room['actuators']:
                     actuatorsDB.update({'key': actuator['key'], 'room': room['key'] }, where('key') == actuator['key'])
-
     def _initialisation(self):
         roomDB.purge()
         usersDB.purge()
@@ -157,11 +172,24 @@ class DB():
         sensorsDB.insert(Sensor(key='multisensor_Group_1_Interval').getDict())
         sensorsDB.insert(Sensor(key='multisensor_Luminance', sensortype='luminance', data={'Luminance':30}).getDict())
         sensorsDB.insert(Sensor(key='plugwise1_type').getDict())
+        sensorsDB.insert(Sensor(key='plugwise1_typ').getDict())
         sensorsDB.insert(Sensor(key='plugwise1_ts').getDict())
         sensorsDB.insert(Sensor(key='plugwise1_mac').getDict())
         sensorsDB.insert(Sensor(key='plugwise1_power', sensortype='lightpower').getDict())
+        sensorsDB.insert(Sensor(key='plugwise1_switch', sensortype='lightswitch').getDict())
         sensorsDB.insert(Sensor(key='plugwise1_energy').getDict())
         sensorsDB.insert(Sensor(key='plugwise1_cum_energy').getDict())
+        sensorsDB.insert(Sensor(key='plugwise1_pwenergy').getDict())
+        sensorsDB.insert(Sensor(key='plugwise1_power82').getDict())
+        sensorsDB.insert(Sensor(key='plugwise1_powerts').getDict())
+        sensorsDB.insert(Sensor(key='plugwise1_name').getDict())
+        sensorsDB.insert(Sensor(key='plugwise1_schedule').getDict())
+        sensorsDB.insert(Sensor(key='plugwise1_requid').getDict())
+        sensorsDB.insert(Sensor(key='plugwise1_power1s').getDict())
+        sensorsDB.insert(Sensor(key='plugwise1_switcheq').getDict())
+        sensorsDB.insert(Sensor(key='plugwise1_readonly').getDict())
+        sensorsDB.insert(Sensor(key='plugwise1_interval').getDict())
+        
         sensorsDB.insert(Sensor(key='plugwise1_interval').getDict())
         sensorsDB.insert(Sensor(key='gpiosensor_window', sensortype='window', data={'window':0}).getDict())
         actuatorsDB.insert(Actuator(key='stateled1', actuatortype='stateled', topicdata={'data': 0}).getDict())
@@ -186,6 +214,7 @@ class DB():
                                                            'multisensor_Group_1_Interval',
                                                            'gpiosensor_window',
                                                            'plugwise1_power', 
+                                                           'plugwise1_switch', 
                                                            'plugwise1_energy', 
                                                            'plugwise1_cum_energy',
                                                            'plugwise1_interval'], actuators=['stateled1', 'notificationrgbled1', 'light1'], users=['staff1', 'staff2']).getDict())

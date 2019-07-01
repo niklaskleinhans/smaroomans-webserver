@@ -8,20 +8,56 @@ class StateMachine():
         self.actionData = {}
         self.conditions= {'temperatureExceed': {'temperature': 25},
                           'temperatureBelow': {'temperature': 19},
-                          'luminanceIsLow': {'luminance': 140}}
+                          'luminanceIsLow': {'luminance': 90},
+                          'luminanceIsHigh': {'luminance' : 100}}
         self.triggers = [{'key' : 'sendOpenWindowNotification',
-                         'actions' : [self.DB.addNotification, self.publisher.publishRoomNotifications],
+                         'actions' : [self.DB.appendNotification, self.publisher.publishRoomNotifications],
                          'actiondata':[self.createNotificationOpenWindow, self.createPublishData],
-                         'conditions': [self.temperatureExceed, self.windowOpen]},
+                         'conditions': [self.temperatureExceed, self.windowClosed]},
                          {'key' : 'sendEnableLight',
-                         'conditions' : [self.luminanceIsLow],
-                         'actions' : [self.DB.addNotification, self.publisher.publishRoomNotifications],
-                         'actiondata': [self.createNotificationEnableLight, self.createNoneData]}]
+                         'conditions' : [self.luminanceIsLow, self.lightOff],
+                         'actions' : [self.DB.appendNotification, self.publisher.publishRoomNotifications],
+                         'actiondata': [self.createNotificationEnableLight, self.createNoneData]},
+                         {'key' : 'sendDisableLight',
+                         'conditions' : [self.luminanceIsHigh, self.lightOn],
+                         'actions' : [self.DB.appendNotification, self.publisher.publishRoomNotifications],
+                         'actiondata': [self.createNotificationDisableLight, self.createNoneData]} ]
 
 
     def luminanceIsLow(self, room):
         try:
-            if self.DB.getRoomLuminance(room) <= self.conditions['luminanceIsLow']['luminance']:
+            luminance = self.DB.getRoomLuminance(room)
+            if luminance is not None and luminance <= self.conditions['luminanceIsLow']['luminance']:
+                return True
+            else:
+                return False 
+        except Exception as e:
+            print(e)
+    
+    def luminanceIsHigh(self, room):
+        try:
+            luminance = self.DB.getRoomLuminance(room)
+            if luminance is not None and luminance > self.conditions['luminanceIsHigh']['luminance']:
+                return True
+            else:
+                return False 
+        except Exception as e:
+            print(e)
+
+    def lightOn(self, room):
+        try:
+            lightState = self.DB.getRoomLightState(room)
+            if lightState is not None and lightState == 'on':
+                return True
+            else:
+                return False 
+        except Exception as e:
+            print(e)
+    
+    def lightOff(self, room):
+        try:
+            lightState = self.DB.getRoomLightState(room)
+            if lightState is not None and lightState == 'off':
                 return True
             else:
                 return False 
@@ -30,28 +66,31 @@ class StateMachine():
 
     def temperatureExceed(self, room):
         try:
-            if self.DB.getRoomTemperature(room) >= self.conditions['temperatureExceed']['temperature']:
+            temperature = self.DB.getRoomTemperature(room)
+            if temperature is not None and temperature >= self.conditions['temperatureExceed']['temperature']:
                 return True
             else:
                 return False
         except Exception as e:
             print(e)
 
-    
     def temperatureBelow(self, room):
-        if self.DB.getRoomTemperature(room) < self.conditions['temperatureBelow']['temperature']:
+        temperature = self.DB.getRoomTemperature(room)
+        if temperature is not None and temperature < self.conditions['temperatureBelow']['temperature']:
             return True
         else:
             return False
 
     def windowOpen(self, room):
-        if self.DB.getRoomWindowStatus(room) == 1:
+        windowStatus = self.DB.getRoomWindowStatus(room)
+        if windowStatus is not None and windowStatus  == 1:
             return True
         else:
             return False
     
     def windowClosed(self, room):
-        if self.DB.getRoomWindowStatus(room) == 0:
+        windowStatus = self.DB.getRoomWindowStatus(room)
+        if windowStatus is not None and windowStatus == 0:
             return True
         else:
             return False
@@ -69,31 +108,36 @@ class StateMachine():
     def createNotificationEnableLight(self, room):
         topic, topicdata = self.DB.getRoomActuatorTopicAndData(room, 'light')
         topicdata['val'] = 'on'
-        return {'notification': Notification(notificationType='enableLight', text='Enable Light', topic=topic, topicdata=topicdata).getDict(),
+        return {'notification': Notification(notificationType='enablelight', text='Enable Light', topic=topic, topicdata=topicdata).getDict(),
                 'room': room}
-    
-    def createNotificationDisbaleLight(self, room):
+
+    def createNotificationDisableLight(self, room):
         topic, topicdata = self.DB.getRoomActuatorTopicAndData(room, 'light')
         topicdata['val'] = 'off'
-        return {'notification': Notification(notificationType='enableLight', text='Enable Light', topic=topic, topicdata=topicdata).getDict(),
+        return {'notification': Notification(notificationType='disablelight', text='Disable Light', topic=topic, topicdata=topicdata).getDict(),
                 'room': room}
 
     def checkConditions(self, stopfunction):
         while(not stopfunction()):
-            time.sleep(10)
-            for room in self.DB.getAllRooms():
-                room = room['key']
-                for trigger in self.triggers:
-                    runCondition = True
-                    for condition in trigger['conditions']:
-                        runCondition = runCondition and condition(room)
-                    if runCondition:
-                        for idx, action in enumerate(trigger['actions']):
-                            args = trigger['actiondata'][idx]
-                            if args(room) is not None:
-                                try:
-                                    action(**trigger['actiondata'][idx](room))
-                                except Exception as e:
-                                    print(e)
-                            else:
-                                action()
+            time.sleep(2)
+            try:
+                self.DB.clearAllNotifications()
+                for room in self.DB.getAllRooms():
+                    room = room['key']
+                    for trigger in self.triggers:
+                        runCondition = True
+                        for condition in trigger['conditions']:
+                            runCondition = runCondition and condition(room)
+                        if runCondition:
+                            for idx, action in enumerate(trigger['actions']):
+                                args = trigger['actiondata'][idx]
+                                if args(room) is not None:
+                                    try:
+                                        action(**trigger['actiondata'][idx](room))
+                                    except Exception as e:
+                                        print(e)
+                                else:
+                                    action()
+            except Exception as e:
+                print(e)
+            self.publisher.publishRoomNotifications()

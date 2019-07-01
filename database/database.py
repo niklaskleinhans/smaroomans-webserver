@@ -105,6 +105,7 @@ class DB():
         sensorsDB.insert(Sensor(key='multisensor_Temperature').getDict())
         sensorsDB.insert(Sensor(key='multisensor_Ultraviolet').getDict())
         sensorsDB.insert(Sensor(key='multisensor_Group_1_Interval').getDict())
+        sensorsDB.insert(Sensor(key='multisensor_Luminance').getDict())
         sensorsDB.insert(Sensor(key='plugwise1_type').getDict())
         sensorsDB.insert(Sensor(key='plugwise1_ts').getDict())
         sensorsDB.insert(Sensor(key='plugwise1_mac').getDict())

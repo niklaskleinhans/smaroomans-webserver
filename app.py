@@ -7,8 +7,12 @@ import json
 from database.database import DB
 from external.sensormanager.sensormanager import SensorManager
 from external.sensormanager.utilities.publisher import Publisher
+
+brokerIP = '192.168.1.230'
+
+
 myDB = DB()
-sensorManager = SensorManager(myDB)
+sensorManager = SensorManager(myDB, brokerIP)
 #sensorManager.startSubscription()
 #publisher = Publisher(myDB,'192.168.1.230')
 #print(myDB.getActuatorTopic('notificationrgbled1'))

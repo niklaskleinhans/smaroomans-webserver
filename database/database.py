@@ -31,7 +31,7 @@ class DB():
         if sensor is not None:
             sensorsDB.upsert({'key': key, 'data': data }, sensorQuery.key == key)
         else:
-            sensorsDB.upsert(Sensor(key=key,data=data).getDict(), sensorQuery.key == key)
+            sensorsDB.insert(Sensor(key=key,data=data).getDict())
 
     def updateSensorRoom(self, key, room):
         key = str(key).replace(" ", "_")
@@ -111,6 +111,7 @@ class DB():
         sensorsDB.insert(Sensor(key='plugwise1_power').getDict())
         sensorsDB.insert(Sensor(key='plugwise1_energy').getDict())
         sensorsDB.insert(Sensor(key='plugwise1_cum_energy').getDict())
+        sensorsDB.insert(Sensor(key='plugwise1_interval').getDict())
         sensorsDB.insert(Sensor(key='gpiosensor_window').getDict())
         actuatorsDB.insert(Actuator(key='stateled1', actuatortype='stateled', data={'data': 0}).getDict())
         actuatorsDB.insert(Actuator(key='stateled2', actuatortype='stateled', data={'data': 0}).getDict())
@@ -130,11 +131,13 @@ class DB():
         roomDB.insert(Room(key='room1',maxStaff=5,sensors=['multisensor_Relative_Humidity', 
                                                            'multisensor_Temperature',
                                                            'multisensor_Ultraviolet', 
+                                                           'multisensor_Luminance', 
                                                            'multisensor_Group_1_Interval',
                                                            'gpiosensor_window',
                                                            'plugwise1_power', 
                                                            'plugwise1_energy', 
-                                                           'plugwise1_cum_energy'], actuators=['stateled1', 'notificationrgbled1', 'light1']).getDict())
+                                                           'plugwise1_cum_energy',
+                                                           'plugwise1_interval'], actuators=['stateled1', 'notificationrgbled1', 'light1']).getDict())
         roomDB.insert(Room(key='room2',maxStaff=3,sensors=['sensor1', 'sensor2'], actuators=['stateled2']).getDict())
         roomDB.insert(Room(key='room3',maxStaff=3,sensors=['sensor3', 'sensor4'], actuators=['stateled3']).getDict())
         roomDB.insert(Room(key='room4',maxStaff=3,sensors=['sensor5', 'sensor6'], actuators=['stateled4']).getDict())

@@ -11,17 +11,17 @@ class StateMachine():
                           'luminanceIsLow': {'luminance': 90},
                           'luminanceIsHigh': {'luminance' : 100}}
         self.triggers = [{'key' : 'sendOpenWindowNotification',
-                         'actions' : [self.DB.appendNotification, self.publisher.publishRoomNotifications],
-                         'actiondata':[self.createNotificationOpenWindow, self.createPublishData],
+                         'actions' : [self.DB.appendNotification],
+                         'actiondata':[self.createNotificationOpenWindow],
                          'conditions': [self.temperatureExceed, self.windowClosed]},
                          {'key' : 'sendEnableLight',
                          'conditions' : [self.luminanceIsLow, self.lightOff],
-                         'actions' : [self.DB.appendNotification, self.publisher.publishRoomNotifications],
-                         'actiondata': [self.createNotificationEnableLight, self.createNoneData]},
+                         'actions' : [self.DB.appendNotification],
+                         'actiondata': [self.createNotificationEnableLight]},
                          {'key' : 'sendDisableLight',
                          'conditions' : [self.luminanceIsHigh, self.lightOn],
-                         'actions' : [self.DB.appendNotification, self.publisher.publishRoomNotifications],
-                         'actiondata': [self.createNotificationDisableLight, self.createNoneData]} ]
+                         'actions' : [self.DB.appendNotification],
+                         'actiondata': [self.createNotificationDisableLight]} ]
 
 
     def luminanceIsLow(self, room):

@@ -66,6 +66,12 @@ class DB():
         #if key in self.sensorCache : sensor['data'] = self.sensorCache[key]
         return sensor['data'] if sensor is not None else None 
 
+    def getSensor(self, key):
+        key = str(key).replace(" ", "_")
+        sensor = self.mongo.db.sensor.find_one({'key' : key})
+        #if key in self.sensorCache : sensor['data'] = self.sensorCache[key]
+        return sensor if sensor is not None else None 
+
     def getRoomSensors(self, room):
         sensordata=[]
         sensors = self.mongo.db.room.find_one({'key' : room})['sensors']

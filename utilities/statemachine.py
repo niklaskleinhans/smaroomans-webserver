@@ -14,6 +14,10 @@ class StateMachine():
                          'actions' : [self.DB.appendNotification],
                          'actiondata':[self.createNotificationOpenWindow],
                          'conditions': [self.temperatureExceed, self.windowClosed]},
+                         {'key' : 'sendCloseWindowNotification',
+                         'actions' : [self.DB.appendNotification],
+                         'actiondata':[self.createNotificationCloseWindow],
+                         'conditions': [self.temperatureBelow, self.windowOpened]},
                          {'key' : 'sendEnableLight',
                          'conditions' : [self.luminanceIsLow, self.lightOff],
                          'actions' : [self.DB.appendNotification],
@@ -21,7 +25,15 @@ class StateMachine():
                          {'key' : 'sendDisableLight',
                          'conditions' : [self.luminanceIsHigh, self.lightOn],
                          'actions' : [self.DB.appendNotification],
-                         'actiondata': [self.createNotificationDisableLight]} ]
+                         'actiondata': [self.createNotificationDisableLight]},
+                         {'key' : 'sendEnableFan',
+                         'conditions' : [self.temperatureExceed, self.fanOff],
+                         'actions' : [self.DB.appendNotification],
+                         'actiondata': [self.createNotificationEnableFan]},
+                         {'key' : 'sendDisableFan',
+                         'conditions' : [self.temperatureBelow, self.fanOn],
+                         'actions' : [self.DB.appendNotification],
+                         'actiondata': [self.createNotificationDisableFan]} ]
 
 
     def luminanceIsLow(self, room):
@@ -64,6 +76,26 @@ class StateMachine():
         except Exception as e:
             print(e)
 
+    def fanOn(self, room):
+        try:
+            fanState = self.DB.getRoomFanState(room)
+            if fanState is not None and fanState == 'on':
+                return True
+            else:
+                return False 
+        except Exception as e:
+            print(e)
+
+    def fanOff(self, room):
+        try:
+            fanState = self.DB.getRoomFanState(room)
+            if fanState is not None and fanState == 'off':
+                return True
+            else:
+                return False 
+        except Exception as e:
+            print(e)
+
     def temperatureExceed(self, room):
         try:
             temperature = self.DB.getRoomTemperature(room)
@@ -95,6 +127,13 @@ class StateMachine():
         else:
             return False
 
+    def windowOpened(self, room):
+        windowStatus = self.DB.getRoomWindowStatus(room)
+        if windowStatus is not None and windowStatus == 1:
+            return True
+        else:
+            return False
+
     def createNoneData(self, room):
         return None
 
@@ -105,6 +144,10 @@ class StateMachine():
         return {'notification': Notification(notificationType='openwindow', text='Open Window').getDict(),
                 'room': room}
     
+    def createNotificationCloseWindow(self, room):
+        return {'notification': Notification(notificationType='closewindow', text='Close Window').getDict(),
+                'room': room}
+
     def createNotificationEnableLight(self, room):
         topic, topicdata = self.DB.getRoomActuatorTopicAndData(room, 'light')
         topicdata['val'] = 'on'
@@ -115,6 +158,18 @@ class StateMachine():
         topic, topicdata = self.DB.getRoomActuatorTopicAndData(room, 'light')
         topicdata['val'] = 'off'
         return {'notification': Notification(notificationType='disablelight', text='Disable Light', topic=topic, topicdata=topicdata).getDict(),
+                'room': room}
+
+    def createNotificationEnableFan(self, room):
+        topic, topicdata = self.DB.getRoomActuatorTopicAndData(room, 'fan')
+        topicdata['val'] = 'on'
+        return {'notification': Notification(notificationType='enablefan', text='Enable Fan', topic=topic, topicdata=topicdata).getDict(),
+                'room': room}
+
+    def createNotificationDisableFan(self, room):
+        topic, topicdata = self.DB.getRoomActuatorTopicAndData(room, 'fan')
+        topicdata['val'] = 'off'
+        return {'notification': Notification(notificationType='disabelefan', text='Disable Fan', topic=topic, topicdata=topicdata).getDict(),
                 'room': room}
 
     def checkConditions(self, stopfunction):

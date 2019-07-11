@@ -88,16 +88,6 @@ def triggerNotification():
     sensorManager.publisher.publish('plugwise2py/cmd/switch/000D6F0004B1E6C4', test)
     return '',status.HTTP_200_OK
 
-@app.route('/api/stop', methods=['PUT'])
-def stopThread():
-    sensorManager.stopSubscription()
-    return '', status.HTTP_200_OK
-
-@app.route('/api/start', methods=['PUT'])
-def startThread():
-    sensorManager.startSubscription()
-    return '', status.HTTP_200_OK
-
 @app.route('/api/initdb', methods=['PUT'])
 def initDB():
     myDB._initialisation()    

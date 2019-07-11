@@ -2,9 +2,9 @@ from models.notification import Notification
 import time
 
 class StateMachine():
-    def __init__(self,database, publisher):
+    def __init__(self,database, sensormanager):
         self.DB=database = database
-        self.publisher = publisher
+        self.sensormanager= sensormanager
         self.actionData = {}
         self.conditions= {'temperatureExceed': {'temperature': 25},
                           'temperatureBelow': {'temperature': 19},
@@ -140,4 +140,4 @@ class StateMachine():
                                     action()
             except Exception as e:
                 print(e)
-            self.publisher.publishRoomNotifications()
+            self.sensormanager.publisher.publishRoomNotifications()

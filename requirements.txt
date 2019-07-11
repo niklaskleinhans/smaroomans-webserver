@@ -4,6 +4,7 @@ Flask==1.0.3
 Flask-API==1.1
 Flask-Cors==3.0.8
 Flask-MQTT==1.0.5
+Flask-PyMongo==2.3.0
 isort==4.3.21
 itsdangerous==1.1.0
 Jinja2==2.10.1
@@ -13,6 +14,7 @@ mccabe==0.6.1
 numpy==1.16.4
 paho-mqtt==1.4.0
 pylint==2.3.1
+pymongo==3.8.0
 six==1.12.0
 tinydb==3.13.0
 typed-ast==1.4.0

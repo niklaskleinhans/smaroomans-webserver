@@ -8,12 +8,11 @@ from database.database import DB
 from external.sensormanager.sensormanager import SensorManager
 from external.sensormanager.utilities.publisher import Publisher
 from errorhandling.errortypes import NotModified, DBError
+from utilities.statemachine import StateMachine
 
 brokerIP = '192.168.1.230'
 
 
-myDB = DB()
-sensorManager = SensorManager(myDB, brokerIP)
 #sensorManager.startSubscription()
 #publisher = Publisher(myDB,'192.168.1.230')
 #print(myDB.getActuatorTopic('notificationrgbled1'))
@@ -28,6 +27,10 @@ app = Flask(__name__,
 app.config['MQTT_BROKER_URL'] = '192.168.1.230'
 app.config['MQTT_BROKER_PORT'] = 1883
 app.config['MQTT_REFRESH_TIME'] = 1.0  # refresh time in seconds
+
+myDB = DB(app)
+sensorManager = SensorManager(myDB, brokerIP, StateMachine)
+
 mqtt = Mqtt(app)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
@@ -59,6 +62,10 @@ def send_js(path):
 def send_css(path):
     return send_from_directory('../smaroomans-client/dist/css/', path)
 
+@app.route('/fonts/<path:path>')
+def send_fonts(path):
+    return send_from_directory('../smaroomans-client/dist/fonts/', path)
+
 @app.route("/api/triggernotification", methods=['POST'])
 def triggerNotification():
     print(request.method)
@@ -85,10 +92,14 @@ def initDB():
 @app.route('/api/allrooms', methods=['GET'])
 def getRooms():
     try:
-        rooms = myDB.getAllRooms()
+        result=[]
+        for room in myDB.getAllRooms():
+            result.append({ 'key': room['key'], 
+                            'sensors': room['sensors'],
+                            'active' : room['active']})
     except Exception as e:
         raise DBError(str(e), status_code=500) 
-    return jsonify({'rooms': rooms})
+    return jsonify({'rooms': result})
 
 @app.route('/api/roomsensors/<string:roomkey>', methods=['GET'])
 def getRoomSensors(roomkey):
@@ -101,10 +112,12 @@ def getRoomSensors(roomkey):
 @app.route('/api/allusers', methods=['GET'])
 def getAllUsers():
     try:
-        users = myDB.getAllUsers()
+        result=[]
+        for user in myDB.getAllUsers():
+           result.append({'key' : user['key'], 'workplan': user['workplan']})
     except Exception as e:
         raise DBError(str(e), status_code=500) 
-    return jsonify({'users': users})
+    return jsonify({'users': result})
 
 #@app.route('/api/getuserplan', methods=['GET'])
 

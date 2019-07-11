@@ -80,23 +80,21 @@ def send_css(path):
 def send_fonts(path):
     return send_from_directory('../smaroomans-client/dist/fonts/', path)
 
-@app.route("/api/triggernotification", methods=['POST'])
-def triggerNotification():
+@app.route("/api/controllight", methods=['POST'])
+def controllight():
     print(request.method)
     result = request.json
     test['val']= result['val']
     sensorManager.publisher.publish('plugwise2py/cmd/switch/000D6F0004B1E6C4', test)
     return '',status.HTTP_200_OK
 
-@app.route('/api/stop', methods=['PUT'])
-def stopThread():
-    sensorManager.stopSubscription()
-    return '', status.HTTP_200_OK
-
-@app.route('/api/start', methods=['PUT'])
-def startThread():
-    sensorManager.startSubscription()
-    return '', status.HTTP_200_OK
+@app.route("/api/controlfan", methods=['POST'])
+def controlfan():
+    print(request.method)
+    result = request.json
+    test['val']= result['val']
+    sensorManager.publisher.publish('plugwise2py/cmd/switch/000D6F0005692B55', test)
+    return '',status.HTTP_200_OK
 
 @app.route('/api/initdb', methods=['PUT'])
 def initDB():

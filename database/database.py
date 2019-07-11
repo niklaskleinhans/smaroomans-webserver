@@ -132,6 +132,13 @@ class DB():
             if sensor['sensortype'] == 'lightswitch':
                 return sensor['data']['switch']
 
+    def getRoomFanState(self,room):
+        roomSensors = self.mongo.db.room.find_one({'key' : room})['sensors']
+        for roomSensor in roomSensors:
+            sensor = self.mongo.db.sensor.find_one({'key' : roomSensor})
+            if sensor['sensortype'] == 'fanswitch':
+                return sensor['data']['switch']
+
     def getRoomState(self, room, date):
         try:
             roommap=self.mongo.db.roommanager.find_one({'datum': util.datumToSeconds(date), 'room': room})
@@ -194,6 +201,7 @@ class DB():
         self.mongo.db.sensor.insert(Sensor(key='multisensor_Ultraviolet').getDict())
         self.mongo.db.sensor.insert(Sensor(key='multisensor_Group_1_Interval').getDict())
         self.mongo.db.sensor.insert(Sensor(key='multisensor_Luminance', sensortype='luminance', data={'Luminance':30}).getDict())
+
         self.mongo.db.sensor.insert(Sensor(key='plugwise1_type').getDict())
         self.mongo.db.sensor.insert(Sensor(key='plugwise1_typ').getDict())
         self.mongo.db.sensor.insert(Sensor(key='plugwise1_ts').getDict())
@@ -212,8 +220,26 @@ class DB():
         self.mongo.db.sensor.insert(Sensor(key='plugwise1_switcheq').getDict())
         self.mongo.db.sensor.insert(Sensor(key='plugwise1_readonly').getDict())
         self.mongo.db.sensor.insert(Sensor(key='plugwise1_interval').getDict())
-        
-        self.mongo.db.sensor.insert(Sensor(key='plugwise1_interval').getDict())
+
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_type').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_typ').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_ts').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_mac').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_power', sensortype='fanpower').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_switch', sensortype='fanswitch').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_energy').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_cum_energy').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_pwenergy').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_power82').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_powerts').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_name').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_schedule').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_requid').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_power1s').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_switcheq').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_readonly').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_interval').getDict())
+
         self.mongo.db.sensor.insert(Sensor(key='gpiosensor_window', sensortype='window', data={'window':0}).getDict())
         self.mongo.db.actuator.insert(Actuator(key='stateled1', actuatortype='stateled', topicdata={'data': 0}).getDict())
         self.mongo.db.actuator.insert(Actuator(key='stateled2', actuatortype='stateled', topicdata={'data': 0}).getDict())
@@ -227,6 +253,7 @@ class DB():
         self.mongo.db.actuator.insert(Actuator(key='stateled10', actuatortype='stateled', topicdata={'data': 0}).getDict())
         self.mongo.db.actuator.insert(Actuator(key='notificationrgbled1', actuatortype='notificationrgbled', topicdata={'state': [0,0,0]}).getDict())
         self.mongo.db.actuator.insert(Actuator(key='light1', actuatortype='light', topic= 'plugwise2py/cmd/switch/000D6F0004B1E6C4', topicdata={'mac':"", "cmd":"switch", "val":"off"}).getDict())
+        self.mongo.db.actuator.insert(Actuator(key='fan1', actuatortype='fan', topic= 'plugwise2py/cmd/switch/000D6F0005692B55', topicdata={'mac':"", "cmd":"switch", "val":"off"}).getDict())
 
         for i in range(19):
             self.mongo.db.sensor.insert(Sensor(key='sensor'+ str(i)).getDict())
@@ -240,7 +267,12 @@ class DB():
                                                            'plugwise1_switch', 
                                                            'plugwise1_energy', 
                                                            'plugwise1_cum_energy',
-                                                           'plugwise1_interval'], actuators=['stateled1', 'notificationrgbled1', 'light1'], users=['staff1', 'staff2']).getDict())
+                                                           'plugwise1_interval',
+                                                           'plugwise2_power', 
+                                                           'plugwise2_switch', 
+                                                           'plugwise2_energy', 
+                                                           'plugwise2_cum_energy',
+                                                           'plugwise2_interval'], actuators=['stateled1', 'notificationrgbled1', 'light1', 'fan1'], users=['staff1', 'staff2']).getDict())
         self.mongo.db.room.insert(Room(key='room2',maxStaff=3,sensors=['sensor1', 'sensor2'], actuators=['stateled2']).getDict())
         self.mongo.db.room.insert(Room(key='room3',maxStaff=3,sensors=['sensor3', 'sensor4'], actuators=['stateled3']).getDict())
         self.mongo.db.room.insert(Room(key='room4',maxStaff=3,sensors=['sensor5', 'sensor6'], actuators=['stateled4']).getDict())

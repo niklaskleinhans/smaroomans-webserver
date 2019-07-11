@@ -62,6 +62,10 @@ def send_js(path):
 def send_css(path):
     return send_from_directory('../smaroomans-client/dist/css/', path)
 
+@app.route('/fonts/<path:path>')
+def send_fonts(path):
+    return send_from_directory('../smaroomans-client/dist/fonts/', path)
+
 @app.route("/api/triggernotification", methods=['POST'])
 def triggerNotification():
     print(request.method)

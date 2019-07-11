@@ -44,19 +44,17 @@ class DB():
     def appendNotification(self, room, notification):
         roomNotifications = self.mongo.db.room.find_one({'key': room})['notifications']
         roomNotifications.append(notification)
-        self.roomlock.acquire()
         try:
             self.mongo.db.room.update_one({'key' : room}, {'$set' :{'notifications': roomNotifications}}, upsert= False)
-        finally:
-            self.roomlock.release()
+        except Exception as e:
+            print(e)
 
     def clearAllNotifications(self):
-        self.roomlock.acquire()
         try:
             for room in self.getAllRooms():
                 self.mongo.db.room.update_one({'key' : room['key']}, {'$set' : {'notifications' : []}}, upsert = False)
-        finally:
-            self.roomlock.release()
+        except Exception as e: 
+            print(e)
 
     def updateSensorData(self, key, data):
         key = str(key).replace(" ","_")

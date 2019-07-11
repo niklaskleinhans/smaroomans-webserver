@@ -12,14 +12,14 @@ import utilities.util as util
 from errorhandling.errortypes import NotModified, DBError
 from utilities.statemachine import StateMachine
 
-brokerIP = '192.168.1.230'
+brokerIP = '192.168.10.230'
 test = {"mac":"", "cmd": "switch", "val": "on"}
 
 app = Flask(__name__,
             static_url_path = '',
             template_folder = "../smaroomans-client/dist/")
 
-app.config['MQTT_BROKER_URL'] = '192.168.1.230'
+app.config['MQTT_BROKER_URL'] = brokerIP
 app.config['MQTT_BROKER_PORT'] = 1883
 app.config['MQTT_REFRESH_TIME'] = 1.0  # refresh time in seconds
 

@@ -4,9 +4,11 @@ from flask_cors import CORS
 from flask_mqtt import Mqtt
 import json
 
+from threads.stopableThread import StopableThread
 from database.database import DB
 from external.sensormanager.sensormanager import SensorManager
-from external.sensormanager.utilities.publisher import Publisher
+from utilities.roommanger import RoomManager
+import utilities.util as util
 from errorhandling.errortypes import NotModified, DBError
 from utilities.statemachine import StateMachine
 
@@ -29,10 +31,28 @@ app.config['MQTT_BROKER_PORT'] = 1883
 app.config['MQTT_REFRESH_TIME'] = 1.0  # refresh time in seconds
 
 myDB = DB(app)
-sensorManager = SensorManager(myDB, brokerIP, StateMachine)
-
 mqtt = Mqtt(app)
+sensorManager = SensorManager(myDB, brokerIP, mqtt)
+#sensorManager.startSubscription()
+statemachine = StateMachine(myDB,sensorManager)
+statemachineThread = StopableThread(name="statemachineThread", function= statemachine.checkConditions, args={}) 
+statemachineThread.start()
+roomManager = RoomManager(myDB, sensorManager)
+
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+@mqtt.on_connect()
+def handle_connect(client,userdata,flags,rc):
+    sensorManager.on_connect(client,userdata,flags,rc)
+    sensorManager.subscriber.startSubscription()
+
+@mqtt.on_disconnect()
+def handle_disconnect(client,userdata,rc):
+    sensorManager.on_disconnect(client,userdata,rc)
+
+@mqtt.on_message()
+def handle_mqtt_message(client, userdata,message):
+    sensorManager.subscriber.on_message(client,userdata,message)
 
 @app.errorhandler(NotModified)
 def handle_not_modified(error):
@@ -71,7 +91,7 @@ def triggerNotification():
     print(request.method)
     result = request.json
     test['val']= result['val']
-    mqtt.publish('plugwise2py/cmd/switch/000D6F0004B1E6C4', json.dumps(test))
+    sensorManager.publisher.publish('plugwise2py/cmd/switch/000D6F0004B1E6C4', test)
     return '',status.HTTP_200_OK
 
 @app.route('/api/stop', methods=['PUT'])
@@ -96,7 +116,8 @@ def getRooms():
         for room in myDB.getAllRooms():
             result.append({ 'key': room['key'], 
                             'sensors': room['sensors'],
-                            'active' : room['active']})
+                            'active' : room['active'],
+                            'users' : room['users']})
     except Exception as e:
         raise DBError(str(e), status_code=500) 
     return jsonify({'rooms': result})
@@ -126,9 +147,21 @@ def setUserPlan():
     payload = request.json
     try:
         myDB.setUserPlan(payload['key'], payload['workplan'])
+        roomManager.optimizeRoomMaps()
     except Exception as e:
         raise NotModified(str(e), status_code=304)
     return '', status.HTTP_200_OK
+
+
+@app.route('/api/getroommaps', methods=['GET'])
+def getRoomMaps():
+    try:
+        result=[]
+        for roommap in roomManager.checkRoomManagerEntrys():
+            result.append({'datum': util.secondsToDatum(roommap['datum']), 'room': roommap['room'], 'users': roommap['users']})
+    except Exception as e:
+        raise NotModified(str(e), status_code=304)
+    return jsonify({'data' : result})
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')

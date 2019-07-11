@@ -3,8 +3,11 @@ from models.room import Room
 from models.user import User
 from models.sensor import Sensor
 from models.actuator import Actuator
+from models.roommap import Roommap
+import utilities.util as util
 import threading, time
 import numpy as np
+import datetime
 
 class DB():
     def __init__(self, app):
@@ -16,7 +19,15 @@ class DB():
         self.userlock = threading.Lock()
     
     def getAllRooms(self):
-        return self.mongo.db.room.find()
+        rooms = []
+        for room in self.mongo.db.room.find():
+            try:
+                room['active']=self.getRoomState(room['key'], datetime.datetime.now().strftime('%Y-%m-%d'))
+                room['users']=self.getRoomUsers(room['key'], datetime.datetime.now().strftime('%Y-%m-%d'))
+                rooms.append(Room(**room).getDict())
+            except Exception as e:
+                print(e)
+        return rooms
     
     def getAllSensors(self):
         return self.mongo.db.sensor.find()
@@ -122,7 +133,31 @@ class DB():
             sensor = self.mongo.db.sensor.find_one({'key' : roomSensor})
             if sensor['sensortype'] == 'lightswitch':
                 return sensor['data']['switch']
-    
+
+    def getRoomState(self, room, date):
+        try:
+            roommap=self.mongo.db.roommanager.find_one({'datum': util.datumToSeconds(date), 'room': room})
+            if roommap is not None:
+                return roommap['active']
+            else:
+                return True
+        except Exception as e:
+            print(e)
+        return False 
+
+    def getRoomUsers(self, room, date):
+        return self.mongo.db.roommanager.find_one({'datum': util.datumToSeconds(date), 'room': room})['users']
+
+    def getRoomMapsByDatum(self, timebegin, timeend):
+        datumbegin = util.datumToSeconds(timebegin)
+        datumend = util.datumToSeconds(timeend)
+        roommaps = self.mongo.db.roommanager.find({'datum' : { "$gte": datumbegin, "$lte": datumend  }})
+        return roommaps
+
+    def updateRoomMap(self, roommap):
+        self.mongo.db.roommanager.update_one({'datum' : util.datumToSeconds(roommap['datum']), 'room': roommap['room']},
+                                             {'$set' : {'users' : roommap['users'], 'active': roommap['active']}}, upsert = True)
+
     def _setSensorRooms(self):
         for sensor in self.getAllSensors():
             print('sensor:', sensor)
@@ -139,11 +174,15 @@ class DB():
                 if actuator['key'] in room['actuators']:
                     self.mongo.db.actuator.update_one({'key': actuator['key']} , {'$set' : {'room': room['key']}}, upsert =True)
 
+
+    
+
     def _initialisation(self):
         self.mongo.db.sensor.drop()
         self.mongo.db.user.drop()
         self.mongo.db.room.drop()
         self.mongo.db.actuator.drop()
+        self.mongo.db.roommanager.drop()
         self.mongo.db.sensor.insert(Sensor(key='multisensor_Relative_Humidity', sensortype='humidity', data={'Humidity':0}).getDict())
         self.mongo.db.sensor.insert(Sensor(key='multisensor_Temperature', sensortype='temperature', data={'Temperature':0}).getDict())
         self.mongo.db.sensor.insert(Sensor(key='multisensor_Ultraviolet').getDict())
@@ -207,5 +246,10 @@ class DB():
         self.mongo.db.room.insert(Room(key='room10',maxStaff=3,sensors=['sensor17', 'sensor18'], actuators=['stateled10']).getDict())
         for i in range(41):
             self.mongo.db.user.insert(User(key='staff' + str(i)).getDict())
+
+        self.mongo.db.roommanager.insert(Roommap(util.datumToSeconds("2019-07-15"),'room1', users=['staff1', 'staff2']).getDict())
+        self.mongo.db.roommanager.insert(Roommap(util.datumToSeconds("2019-07-15"),'room3', users=['staff10', 'staff12']).getDict())
+        self.mongo.db.roommanager.insert(Roommap(util.datumToSeconds("2019-07-15"),'room7', users=['staff20', 'staff21']).getDict())
+        self.mongo.db.roommanager.insert(Roommap(util.datumToSeconds("2019-07-16"),'room1', users=[]).getDict())
         self._setSensorRooms()
         self._setActuatorRooms()

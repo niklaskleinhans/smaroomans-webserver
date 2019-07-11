@@ -1,5 +1,5 @@
 class Room():
-    def __init__(self, key, active=True, notifications=[], maxStaff=0, sensors=[], actuators=[], users=[]):
+    def __init__(self, key, active=True, notifications=[], maxStaff=0, sensors=[], actuators=[], users=[], _id=0):
         self._key = key
         self._maxStaff = maxStaff
         self._sensors = sensors

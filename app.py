@@ -12,7 +12,7 @@ import utilities.util as util
 from errorhandling.errortypes import NotModified, DBError
 from utilities.statemachine import StateMachine
 
-brokerIP = '192.168.10.230'
+brokerIP = '192.168.0.230'
 test = {"mac":"", "cmd": "switch", "val": "on"}
 
 app = Flask(__name__,

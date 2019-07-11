@@ -24,12 +24,14 @@ app.config['MQTT_BROKER_PORT'] = 1883
 app.config['MQTT_REFRESH_TIME'] = 1.0  # refresh time in seconds
 
 myDB = DB(app)
+myDB._initialisation()
 mqtt = Mqtt(app)
 sensorManager = SensorManager(myDB, brokerIP, mqtt)
 statemachine = StateMachine(myDB,sensorManager)
 statemachineThread = StopableThread(name="statemachineThread", function= statemachine.checkConditions, args={}) 
 statemachineThread.start()
 roomManager = RoomManager(myDB, sensorManager)
+roomManager.optimizeRoomMaps()
 
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 

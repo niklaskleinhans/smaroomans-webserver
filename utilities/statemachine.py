@@ -193,6 +193,6 @@ class StateMachine():
                                         print(e)
                                 else:
                                     action()
+                self.sensormanager.publisher.publishRoomNotifications()
             except Exception as e:
                 print(e)
-            self.sensormanager.publisher.publishRoomNotifications()

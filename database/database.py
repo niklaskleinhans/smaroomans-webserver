@@ -146,7 +146,15 @@ class DB():
         return False 
 
     def getRoomUsers(self, room, date):
-        return self.mongo.db.roommanager.find_one({'datum': util.datumToSeconds(date), 'room': room})['users']
+        try:
+            roommap = self.mongo.db.roommanager.find_one({'datum': util.datumToSeconds(date), 'room': room})
+            if roommap is not None:
+                return roommap['users']
+            else:
+                return []
+        except Exception as e:
+            print(e)
+        return []
 
     def getRoomMapsByDatum(self, timebegin, timeend):
         datumbegin = util.datumToSeconds(timebegin)

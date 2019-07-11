@@ -13,13 +13,6 @@ from errorhandling.errortypes import NotModified, DBError
 from utilities.statemachine import StateMachine
 
 brokerIP = '192.168.1.230'
-
-
-#sensorManager.startSubscription()
-#publisher = Publisher(myDB,'192.168.1.230')
-#print(myDB.getActuatorTopic('notificationrgbled1'))
-#publisher.publish(myDB.getActuatorTopic('notificationrgbled1'),{'state': [0,1,0]})
-
 test = {"mac":"", "cmd": "switch", "val": "on"}
 
 app = Flask(__name__,
@@ -33,7 +26,6 @@ app.config['MQTT_REFRESH_TIME'] = 1.0  # refresh time in seconds
 myDB = DB(app)
 mqtt = Mqtt(app)
 sensorManager = SensorManager(myDB, brokerIP, mqtt)
-#sensorManager.startSubscription()
 statemachine = StateMachine(myDB,sensorManager)
 statemachineThread = StopableThread(name="statemachineThread", function= statemachine.checkConditions, args={}) 
 statemachineThread.start()
@@ -52,7 +44,7 @@ def handle_disconnect(client,userdata,rc):
 
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata,message):
-    sensorManager.subscriber.on_message(client,userdata,message)
+    sensorManager.subscriber.on_message(client,userdata,message) 
 
 @app.errorhandler(NotModified)
 def handle_not_modified(error):

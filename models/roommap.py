@@ -2,8 +2,9 @@
 Roommap structure
 '''
 
+
 class Roommap():
-    def __init__(self, datum, room='' , users=[], active=False):
+    def __init__(self, datum, room='', users=[], active=False):
         self._datum = datum
         self._room = room
         self._users = users

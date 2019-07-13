@@ -1,3 +1,8 @@
+'''
+Notification structure
+'''
+
+
 class Notification():
     def __init__(self, notificationType, text, topic='', topicdata=''):
         self._text = text
@@ -6,6 +11,9 @@ class Notification():
         self._notificationType = notificationType
 
     def getDict(self):
+        '''
+        returns model as dict
+        '''
         return {'text': self._text,
                 'topic': self._topic,
                 'topicdata': self._topicdata,

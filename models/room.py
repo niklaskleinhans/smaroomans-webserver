@@ -1,3 +1,8 @@
+'''
+Room structure
+'''
+
+
 class Room():
     def __init__(self, key, active=True, notifications=[], maxStaff=0, sensors=[], actuators=[], users=[], _id=0):
         self._key = key
@@ -9,6 +14,9 @@ class Room():
         self._users = users
 
     def getDict(self):
+        '''
+        returns model as dict
+        '''
         return {'key': self._key,
                 'maxStaff': self._maxStaff,
                 'sensors': self._sensors,
@@ -16,4 +24,3 @@ class Room():
                 'active': self._active,
                 'notifications': self._notifications,
                 'users': self._users}
-    

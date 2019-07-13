@@ -1,3 +1,8 @@
+'''
+Actuator structure
+'''
+
+
 class Actuator():
     def __init__(self, key, actuatortype='', topic='', topicdata={}, room=''):
         self._key = key
@@ -7,6 +12,9 @@ class Actuator():
         self._actuatortype = actuatortype
 
     def getDict(self):
+        '''
+        returns model as dict
+        '''
         return {'key': self._key,
                 'topic': self._topic,
                 'topicdata': self._topicdata,

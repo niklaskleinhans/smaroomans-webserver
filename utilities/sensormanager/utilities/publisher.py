@@ -31,4 +31,4 @@ class Publisher():
 
     def publish(self, topic, data):
         #print(topic, data)
-        self.mqtt.publish(topic, json.dumps(data))
+        self.mqtt.publish(topic=topic, payload=json.dumps(data), retain=True)

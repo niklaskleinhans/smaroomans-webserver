@@ -167,8 +167,6 @@ def getAllUsers():
         raise DBError(str(e), status_code=500)
     return jsonify({'users': result})
 
-# @app.route('/api/getuserplan', methods=['GET'])
-
 
 @app.route('/api/setuserplan', methods=['PUT'])
 def setUserPlan():

@@ -1,3 +1,8 @@
+'''
+Sensor structure
+'''
+
+
 class Sensor():
     def __init__(self, key, topic='', sensortype='', data={}, room=''):
         self._key = key
@@ -7,6 +12,9 @@ class Sensor():
         self._topic = topic
 
     def getDict(self):
+        '''
+        returns model as dict
+        '''
         return {'key': self._key,
                 'data': self._data,
                 'room': self._room,

@@ -442,12 +442,19 @@ class DB():
         -------
         roommap:dict
             roommap model as dict
-
         """
         self.mongo.db.roommanager.update_one({'datum': util.datumToSeconds(roommap['datum']), 'room': roommap['room']},
                                              {'$set': {'users': roommap['users'], 'active': roommap['active']}}, upsert=True)
 
     def updateDate(self, date):
+        """
+        update date offset
+
+        Parameters
+        -------
+        date:string
+            datestring
+        """
         self.dayoffset = (datetime.datetime.strptime(date, "%Y-%m-%d") - datetime.datetime.strptime(
             datetime.datetime.now().strftime("%Y-%m-%d"), "%Y-%m-%d")).days
 

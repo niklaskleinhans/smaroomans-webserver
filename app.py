@@ -142,7 +142,8 @@ def getRooms():
             result.append({'key': room['key'],
                            'sensors': room['sensors'],
                            'active': room['active'],
-                           'users': room['users']})
+                           'users': room['users'],
+                           'maxStaff': room['maxStaff']})
     except Exception as e:
         raise DBError(str(e), status_code=500)
     return jsonify({'rooms': result})

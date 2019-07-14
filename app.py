@@ -13,9 +13,9 @@ from utilities.roommanger import RoomManager
 from errorhandling.errortypes import NotModified, DBError
 from utilities.statemachine import StateMachine
 
-__authore__ = "Robert Gänzle, Marius Altmann, Niklas Kleinhans"
+__author__ = "Robert Gänzle, Marius Altmann, Niklas Kleinhans"
 __license__ = "MIT"
-__email__ = "inf@scitlab.de"
+__version__ = "v1.0.0" 
 __status__ = "development"
 
 import utilities.util as util

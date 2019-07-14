@@ -20,6 +20,7 @@ __status__ = "development"
 
 import utilities.util as util
 import json
+import time
 
 
 brokerIP = '192.168.0.230'
@@ -36,6 +37,7 @@ app.config['MQTT_REFRESH_TIME'] = 1.0  # refresh time in seconds
 myDB = DB(app)
 myDB._initialisation()
 mqtt = Mqtt(app)
+time.sleep(2)  # bad time offset cause of mqtt
 sensorManager = SensorManager(myDB, brokerIP, mqtt)
 statemachine = StateMachine(myDB, sensorManager)
 statemachineThread = StopableThread(

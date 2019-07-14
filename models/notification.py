@@ -1,0 +1,20 @@
+'''
+Notification structure
+'''
+
+
+class Notification():
+    def __init__(self, notificationType, text, topic='', topicdata=''):
+        self._text = text
+        self._topic = topic
+        self._topicdata = topicdata
+        self._notificationType = notificationType
+
+    def getDict(self):
+        '''
+        returns model as dict
+        '''
+        return {'text': self._text,
+                'topic': self._topic,
+                'topicdata': self._topicdata,
+                'notificationType': self._notificationType}

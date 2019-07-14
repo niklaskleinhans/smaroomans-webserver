@@ -618,7 +618,7 @@ class DB():
                                   'sensor17', 'sensor18'], actuators=['stateled10']).getDict())
 
         # insert User
-        for i in range(41):
+        for i in range(32):
             self.mongo.db.user.insert(User(key='staff' + str(i)).getDict())
 
         # insert roommaps

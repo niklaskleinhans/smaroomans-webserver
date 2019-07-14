@@ -182,7 +182,7 @@ def setUserPlan():
     return '', status.HTTP_200_OK
 
 
-@app.route('/api/updadate', methods=['PUT'])
+@app.route('/api/updatedate', methods=['PUT'])
 def updateDate():
     payload = request.json
     try:

@@ -37,7 +37,6 @@ app.config['MQTT_REFRESH_TIME'] = 1.0  # refresh time in seconds
 myDB = DB(app)
 myDB._initialisation()
 mqtt = Mqtt(app)
-#time.sleep(2)  # bad time offset cause of mqtt
 sensorManager = SensorManager(myDB, brokerIP, mqtt)
 statemachine = StateMachine(myDB, sensorManager)
 statemachineThread = StopableThread(
@@ -58,6 +57,7 @@ def handle_connect(client, userdata, flags, rc):
 @mqtt.on_disconnect()
 def handle_disconnect(client, userdata, rc):
     sensorManager.on_disconnect(client, userdata, rc)
+    sensorManager.subscriber.stopSubscription()
 
 
 @mqtt.on_message()

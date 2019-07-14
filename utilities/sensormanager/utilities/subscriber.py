@@ -172,3 +172,6 @@ class Subscriber():
         self.mqtt.subscribe("plugwise2py/state/energy/000D6F0005692B55")
         self.mqtt.subscribe("plugwise2py/state/circle/000D6F0005692B55")
         self.mqtt.subscribe("gpio/sensor/window")
+
+    def stopSubscription(self):
+        self.mqtt.unsubscribe.all()

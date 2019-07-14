@@ -50,6 +50,6 @@ class RoomManager():
                     state = True
                 self.DB.updateRoomMap(
                     Roommap(datum=date, room=room['key'], users=roomUsers, active=state).getDict())
-                if date == datetime.datetime.now().strftime('%Y-%m-%d'):
+                if date == (datetime.datetime.now()+datetime.timedelta(days=self.DB.dayoffset)).strftime('%Y-%m-%d'):
                     self.sensorManager.publisher.publish(
                         'actuator/stateled', {'room': room['key'], 'state': int(state)})

@@ -24,6 +24,7 @@ class DB():
         self.sensorlock = threading.Lock()
         self.roomlock = threading.Lock()
         self.userlock = threading.Lock()
+        self.dayoffset = 0
 
     def getAllRooms(self):
         """
@@ -370,6 +371,8 @@ class DB():
             False: room is in stanbymode
         """
         try:
+            date = (datetime.datetime.strptime(date, "%Y-%m-%d") +
+                    datetime.timedelta(days=self.dayoffset)).strftime('%Y-%m-%d')
             roommap = self.mongo.db.roommanager.find_one(
                 {'datum': util.datumToSeconds(date), 'room': room})
             if roommap is not None:
@@ -397,6 +400,8 @@ class DB():
             userkeys
         """
         try:
+            date = (datetime.datetime.strptime(date, "%Y-%m-%d") +
+                    datetime.timedelta(days=self.dayoffset)).strftime('%Y-%m-%d')
             roommap = self.mongo.db.roommanager.find_one(
                 {'datum': util.datumToSeconds(date), 'room': room})
             if roommap is not None:
@@ -437,10 +442,21 @@ class DB():
         -------
         roommap:dict
             roommap model as dict
-
         """
         self.mongo.db.roommanager.update_one({'datum': util.datumToSeconds(roommap['datum']), 'room': roommap['room']},
                                              {'$set': {'users': roommap['users'], 'active': roommap['active']}}, upsert=True)
+
+    def updateDate(self, date):
+        """
+        update date offset
+
+        Parameters
+        -------
+        date:string
+            datestring
+        """
+        self.dayoffset = (datetime.datetime.strptime(date, "%Y-%m-%d") - datetime.datetime.strptime(
+            datetime.datetime.now().strftime("%Y-%m-%d"), "%Y-%m-%d")).days
 
     ###### Initialization #####
     def _setSensorRooms(self):
@@ -488,15 +504,20 @@ class DB():
         self.mongo.db.sensor.insert(Sensor(
             key='multisensor_Luminance', sensortype='luminance', data={'Luminance': 30}).getDict())
 
-        self.mongo.db.sensor.insert(Sensor(key='plugwise1_type', sensortype='plugtype').getDict())
-        self.mongo.db.sensor.insert(Sensor(key='plugwise1_typ', sensortype='plugtyp').getDict())
-        self.mongo.db.sensor.insert(Sensor(key='plugwise1_ts', sensortype='plugts').getDict())
-        self.mongo.db.sensor.insert(Sensor(key='plugwise1_mac', sensortype='plugmac').getDict())
+        self.mongo.db.sensor.insert(
+            Sensor(key='plugwise1_type', sensortype='plugtype').getDict())
+        self.mongo.db.sensor.insert(
+            Sensor(key='plugwise1_typ', sensortype='plugtyp').getDict())
+        self.mongo.db.sensor.insert(
+            Sensor(key='plugwise1_ts', sensortype='plugts').getDict())
+        self.mongo.db.sensor.insert(
+            Sensor(key='plugwise1_mac', sensortype='plugmac').getDict())
         self.mongo.db.sensor.insert(
             Sensor(key='plugwise1_power', sensortype='lightpower').getDict())
         self.mongo.db.sensor.insert(
             Sensor(key='plugwise1_switch', sensortype='lightswitch').getDict())
-        self.mongo.db.sensor.insert(Sensor(key='plugwise1_energy', sensortype='lightenergy').getDict())
+        self.mongo.db.sensor.insert(
+            Sensor(key='plugwise1_energy', sensortype='lightenergy').getDict())
         self.mongo.db.sensor.insert(
             Sensor(key='plugwise1_cum_energy', sensortype='lightcumenergy').getDict())
         self.mongo.db.sensor.insert(Sensor(key='plugwise1_pwenergy').getDict())
@@ -508,7 +529,8 @@ class DB():
         self.mongo.db.sensor.insert(Sensor(key='plugwise1_power1s').getDict())
         self.mongo.db.sensor.insert(Sensor(key='plugwise1_switcheq').getDict())
         self.mongo.db.sensor.insert(Sensor(key='plugwise1_readonly').getDict())
-        self.mongo.db.sensor.insert(Sensor(key='plugwise1_interval', sensortype='lightinterval').getDict())
+        self.mongo.db.sensor.insert(
+            Sensor(key='plugwise1_interval', sensortype='lightinterval').getDict())
         self.mongo.db.sensor.insert(Sensor(key='plugwise2_type').getDict())
         self.mongo.db.sensor.insert(Sensor(key='plugwise2_typ').getDict())
         self.mongo.db.sensor.insert(Sensor(key='plugwise2_ts').getDict())
@@ -517,7 +539,8 @@ class DB():
             Sensor(key='plugwise2_power', sensortype='fanpower').getDict())
         self.mongo.db.sensor.insert(
             Sensor(key='plugwise2_switch', sensortype='fanswitch').getDict())
-        self.mongo.db.sensor.insert(Sensor(key='plugwise2_energy', sensortype='fanenergy').getDict())
+        self.mongo.db.sensor.insert(
+            Sensor(key='plugwise2_energy', sensortype='fanenergy').getDict())
         self.mongo.db.sensor.insert(
             Sensor(key='plugwise2_cum_energy', sensortype='fancumenergy').getDict())
         self.mongo.db.sensor.insert(Sensor(key='plugwise2_pwenergy').getDict())
@@ -529,7 +552,8 @@ class DB():
         self.mongo.db.sensor.insert(Sensor(key='plugwise2_power1s').getDict())
         self.mongo.db.sensor.insert(Sensor(key='plugwise2_switcheq').getDict())
         self.mongo.db.sensor.insert(Sensor(key='plugwise2_readonly').getDict())
-        self.mongo.db.sensor.insert(Sensor(key='plugwise2_interval', sensortype='faninterval').getDict())
+        self.mongo.db.sensor.insert(
+            Sensor(key='plugwise2_interval', sensortype='faninterval').getDict())
         self.mongo.db.sensor.insert(Sensor(
             key='gpiosensor_window', sensortype='window', data={'window': 0}).getDict())
         for i in range(19):
@@ -601,7 +625,7 @@ class DB():
                                   'sensor17', 'sensor18'], actuators=['stateled10']).getDict())
 
         # insert User
-        for i in range(41):
+        for i in range(32):
             self.mongo.db.user.insert(User(key='staff' + str(i)).getDict())
 
         # insert roommaps

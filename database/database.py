@@ -517,7 +517,7 @@ class DB():
             Sensor(key='plugwise2_power', sensortype='fanpower').getDict())
         self.mongo.db.sensor.insert(
             Sensor(key='plugwise2_switch', sensortype='fanswitch').getDict())
-        self.mongo.db.sensor.insert(Sensor(key='plugwise2_energy').getDict())
+        self.mongo.db.sensor.insert(Sensor(key='plugwise2_energy', sensortype='fanenergy').getDict())
         self.mongo.db.sensor.insert(
             Sensor(key='plugwise2_cum_energy', sensortype='fancumenergy').getDict())
         self.mongo.db.sensor.insert(Sensor(key='plugwise2_pwenergy').getDict())

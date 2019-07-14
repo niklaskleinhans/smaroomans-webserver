@@ -182,6 +182,16 @@ def setUserPlan():
     return '', status.HTTP_200_OK
 
 
+@app.route('/api/updadate', methods=['PUT'])
+def updateDate():
+    payload = request.json
+    try:
+        myDB.updateDate(payload['date'])
+    except Exception as e:
+        raise NotModified(str(e), status_code=304)
+    return '', status.HTTP_200_OK
+
+
 @app.route('/api/getroommaps', methods=['GET'])
 def getRoomMaps():
     try:

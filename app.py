@@ -37,14 +37,13 @@ app.config['MQTT_REFRESH_TIME'] = 1.0  # refresh time in seconds
 myDB = DB(app)
 myDB._initialisation()
 mqtt = Mqtt(app)
-time.sleep(2)  # bad time offset cause of mqtt
+#time.sleep(2)  # bad time offset cause of mqtt
 sensorManager = SensorManager(myDB, brokerIP, mqtt)
 statemachine = StateMachine(myDB, sensorManager)
 statemachineThread = StopableThread(
     name="statemachineThread", function=statemachine.checkConditions, args={})
 statemachineThread.start()
 roomManager = RoomManager(myDB, sensorManager)
-roomManager.optimizeRoomMaps()
 
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
@@ -53,6 +52,7 @@ cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 def handle_connect(client, userdata, flags, rc):
     sensorManager.on_connect(client, userdata, flags, rc)
     sensorManager.subscriber.startSubscription()
+    roomManager.optimizeRoomMaps()
 
 
 @mqtt.on_disconnect()

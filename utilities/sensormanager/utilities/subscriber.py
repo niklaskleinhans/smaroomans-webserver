@@ -162,6 +162,10 @@ class Subscriber():
         '''
         init all subscriber for sensors
         '''
+        #set initial sensor intervals
+        self.publisher.publish('zwave/set/2', {'Group 1 Interval': 5})
+        self.publisher.publish('zwave/set/2', {"Wake-up Interval": 240})
+        self.publisher.publish('zwave/set/2',  {"On time": 10})
         self.mqtt.subscribe('zwave/updates/2')
         self.mqtt.subscribe("plugwise2py/state/energy/000D6F0004B1E6C4")
         self.mqtt.subscribe("plugwise2py/state/circle/000D6F0004B1E6C4")

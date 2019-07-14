@@ -20,6 +20,7 @@ __status__ = "development"
 
 import utilities.util as util
 import json
+import time
 
 
 brokerIP = '192.168.0.230'
@@ -42,7 +43,6 @@ statemachineThread = StopableThread(
     name="statemachineThread", function=statemachine.checkConditions, args={})
 statemachineThread.start()
 roomManager = RoomManager(myDB, sensorManager)
-roomManager.optimizeRoomMaps()
 
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
@@ -51,11 +51,13 @@ cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 def handle_connect(client, userdata, flags, rc):
     sensorManager.on_connect(client, userdata, flags, rc)
     sensorManager.subscriber.startSubscription()
+    roomManager.optimizeRoomMaps()
 
 
 @mqtt.on_disconnect()
 def handle_disconnect(client, userdata, rc):
     sensorManager.on_disconnect(client, userdata, rc)
+    sensorManager.subscriber.stopSubscription()
 
 
 @mqtt.on_message()
@@ -142,7 +144,8 @@ def getRooms():
             result.append({'key': room['key'],
                            'sensors': room['sensors'],
                            'active': room['active'],
-                           'users': room['users']})
+                           'users': room['users'],
+                           'maxStaff': room['maxStaff']})
     except Exception as e:
         raise DBError(str(e), status_code=500)
     return jsonify({'rooms': result})

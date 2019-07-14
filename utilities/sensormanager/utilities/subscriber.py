@@ -52,10 +52,15 @@ class Subscriber():
         key = [key for key in message][0]
         self.DB.updateSensorData('multisensor_' + str(key), message)
         topic = self.DB.getSensorTopic('multisensor_' + str(key))
-        publisherMessage = {'data': message, 'room': ''}
+        publisherMessage = {'data': message, 'room': '', 'sensortype':'', 'key':''}
         try:
-            room = self.DB.getSensor('multisensor_' + str(key))['room']
+            sensor = self.DB.getSensor('multisensor_' + str(key)) 
+            sensorkey = sensor['key'] if sensor['key'] is not None else ''
+            room = sensor['room'] if sensor['room'] is not None else ''
+            sensortype = sensor['sensortype'] if sensor['sensortype'] is not None else ''
+            publisherMessage['key'] = sensorkey
             publisherMessage['room'] = room
+            publisherMessage['sensortype'] = sensortype
         except Exception as e:
             print('multisensor', e, message)
             pass
@@ -80,8 +85,13 @@ class Subscriber():
             topic = self.DB.getSensorTopic('plugwise1_' + str(key))
             publisherMessage = {'data': {key: message[key]}, 'room': ''}
             try:
-                room = self.DB.getSensor('plugwise1_' + str(key))['room']
+                sensor = self.DB.getSensor('plugwise1_' + str(key))
+                sensorkey = sensor['key'] if sensor['key'] is not None else ''
+                room = sensor['room'] if sensor['room'] is not None else ''
+                sensortype = sensor['sensortype'] if sensor['sensortype'] is not None else ''
+                publisherMessage['key'] = sensorkey
                 publisherMessage['room'] = room
+                publisherMessage['sensortype'] = sensortype
             except Exception as e:
                 print('plugwise1', e)
                 pass
@@ -106,8 +116,13 @@ class Subscriber():
             topic = self.DB.getSensorTopic('plugwise2_' + str(key))
             publisherMessage = {'data': {key: message[key]}, 'room': ''}
             try:
-                room = self.DB.getSensor('plugwise2_' + str(key))['room']
+                sensor = self.DB.getSensor('plugwise2_' + str(key))
+                sensorkey = sensor['key'] if sensor['key'] is not None else ''
+                room = sensor['room'] if sensor['room'] is not None else ''
+                sensortype = sensor['sensortype'] if sensor['sensortype'] is not None else ''
+                publisherMessage['key'] = sensorkey
                 publisherMessage['room'] = room
+                publisherMessage['sensortype'] = sensortype
             except Exception as e:
                 print('plugwise2', e)
                 pass
@@ -130,8 +145,13 @@ class Subscriber():
         topic = self.DB.getSensorTopic('gpiosensor_' + str(key))
         publisherMessage = {'data': message, 'room': ''}
         try:
-            room = self.DB.getSensor('gpiosensor_' + str(key))['room']
+            sensor = self.DB.getSensor('gpiosensor_' + str(key))
+            sensorkey = sensor['key'] if sensor['key'] is not None else ''
+            room = sensor['room'] if sensor['room'] is not None else ''
+            sensortype = sensor['sensortype'] if sensor['sensortype'] is not None else ''
+            publisherMessage['key'] = sensorkey
             publisherMessage['room'] = room
+            publisherMessage['sensortype'] = sensortype
         except Exception as e:
             print('gpio', e)
             pass
@@ -142,9 +162,16 @@ class Subscriber():
         '''
         init all subscriber for sensors
         '''
+        #set initial sensor intervals
+        self.publisher.publish('zwave/set/2', {'Group 1 Interval': 5})
+        self.publisher.publish('zwave/set/2', {"Wake-up Interval": 240})
+        self.publisher.publish('zwave/set/2',  {"On time": 10})
         self.mqtt.subscribe('zwave/updates/2')
         self.mqtt.subscribe("plugwise2py/state/energy/000D6F0004B1E6C4")
         self.mqtt.subscribe("plugwise2py/state/circle/000D6F0004B1E6C4")
         self.mqtt.subscribe("plugwise2py/state/energy/000D6F0005692B55")
         self.mqtt.subscribe("plugwise2py/state/circle/000D6F0005692B55")
         self.mqtt.subscribe("gpio/sensor/window")
+
+    def stopSubscription(self):
+        self.mqtt.unsubscribe.all()

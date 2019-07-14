@@ -13,10 +13,6 @@ class SensorManager():
         # init publisher and subscriber
         self.publisher = Publisher(self.DB, host, mqtt)
         self.subscriber = Subscriber(self.DB, host, self.publisher, self.mqtt)
-        #set initial sensor intervals
-        self.publisher.publish('zwave/set/2', {'Group 1 Interval': 5})
-        self.publisher.publish('zwave/set/2', {"Wake-up Interval": 240})
-        self.publisher.publish('zwave/set/2',  {"On time": 10})
 
     def on_connect(self, client, userdata, flags, rc):
         print("publisher client connected", rc)
